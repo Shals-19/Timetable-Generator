@@ -1,0 +1,23 @@
+{
+    "numSections": 2,
+    "courses": [
+        {
+            "name": "aiml",
+            "frequency": 4,
+            "duration": 1,
+            "professors": [
+                "anupama"
+            ]
+        }
+    ],
+    "combinedClasses": [
+        {
+            "name": "civil",
+            "frequency": 3,
+            "duration": 1,
+            "professors": [
+                "prof"
+            ]
+        }
+    ]
+}

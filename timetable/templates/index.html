@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Timetable Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input, .form-group textarea, .form-group button {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 5px;
+        }
+        .timetable {
+            margin-top: 20px;
+            border-collapse: collapse;
+            width: 100%;
+        }
+        .timetable th, .timetable td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        .timetable th {
+            background-color: #f4f4f4;
+        }
+    </style>
+</head>
+<body>
+    <h1>Timetable Generator</h1>
+    <form id="timetableForm">
+        <div class="form-group">
+            <label for="numSections">Number of Sections:</label>
+            <input type="number" id="numSections" name="numSections" min="1" required>
+        </div>
+        <div class="form-group">
+            <label for="numCourses">Number of Courses:</label>
+            <input type="number" id="numCourses" name="numCourses" min="1" required>
+            <button type="button" onclick="generateCourseInputs()">Add Courses</button>
+        </div>
+        <div id="courseInputs"></div>
+        <div class="form-group">
+            <label for="numCombined">Number of Combined Classes:</label>
+            <input type="number" id="numCombined" name="numCombined" min="0" required>
+            <button type="button" onclick="generateCombinedInputs()">Add Combined Classes</button>
+        </div>
+        <div id="combinedInputs"></div>
+        <button type="submit">Generate Timetable</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        function generateCourseInputs() {
+            const numCourses = document.getElementById('numCourses').value;
+            const container = document.getElementById('courseInputs');
+            container.innerHTML = '';
+
+            for (let i = 0; i < numCourses; i++) {
+                const div = document.createElement('div');
+                div.className = 'form-group';
+                div.innerHTML = `
+                    <label>Course ${i + 1} Name:</label>
+                    <input type="text" name="courseName${i}" required>
+                    <label>Frequency per Week:</label>
+                    <input type="number" name="courseFrequency${i}" min="1" required>
+                    <label>Duration (1 or 2 hours):</label>
+                    <input type="number" name="courseDuration${i}" min="1" max="2" required>
+                    <label>Professors (comma-separated):</label>
+                    <input type="text" name="courseProfessors${i}" required>
+                `;
+                container.appendChild(div);
+            }
+        }
+
+        function generateCombinedInputs() {
+            const numCombined = document.getElementById('numCombined').value;
+            const container = document.getElementById('combinedInputs');
+            container.innerHTML = '';
+
+            for (let i = 0; i < numCombined; i++) {
+                const div = document.createElement('div');
+                div.className = 'form-group';
+                div.innerHTML = `
+                    <label>Combined Class ${i + 1} Name:</label>
+                    <input type="text" name="combinedName${i}" required>
+                    <label>Frequency per Week:</label>
+                    <input type="number" name="combinedFrequency${i}" min="1" required>
+                    <label>Duration (1 or 2 hours):</label>
+                    <input type="number" name="combinedDuration${i}" min="1" max="2" required>
+                    <label>Professors (comma-separated):</label>
+                    <input type="text" name="combinedProfessors${i}" required>
+                `;
+                container.appendChild(div);
+            }
+        }
+
+        document.getElementById('timetableForm').onsubmit = async (e) => {
+            e.preventDefault();
+
+            const numSections = document.getElementById('numSections').value;
+            const numCourses = document.getElementById('numCourses').value;
+            const numCombined = document.getElementById('numCombined').value;
+
+            const courses = [];
+            for (let i = 0; i < numCourses; i++) {
+                courses.push({
+                    name: e.target[`courseName${i}`].value,
+                    frequency: parseInt(e.target[`courseFrequency${i}`].value),
+                    duration: parseInt(e.target[`courseDuration${i}`].value),
+                    professors: e.target[`courseProfessors${i}`].value.split(',')
+                });
+            }
+
+            const combinedClasses = [];
+            for (let i = 0; i < numCombined; i++) {
+                combinedClasses.push({
+                    name: e.target[`combinedName${i}`].value,
+                    frequency: parseInt(e.target[`combinedFrequency${i}`].value),
+                    duration: parseInt(e.target[`combinedDuration${i}`].value),
+                    professors: e.target[`combinedProfessors${i}`].value.split(',')
+                });
+            }
+
+            const data = {
+                numSections: parseInt(numSections),
+                courses: courses,
+                combinedClasses: combinedClasses
+            };
+
+            try {
+                const res = await fetch('/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const output = await res.json();
+
+                if (output.error) {
+                    document.getElementById('result').innerHTML = `<p style="color: red;">${output.error}</p>`;
+                } else {
+                    displayTimetable(output);
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        };
+
+        function displayTimetable(data) {
+            const result = document.getElementById('result');
+            result.innerHTML = '';
+
+            for (const [section, timetable] of Object.entries(data)) {
+                const sectionDiv = document.createElement('div');
+                sectionDiv.innerHTML = `<h2>Section: ${section}</h2>`;
+
+                const table = document.createElement('table');
+                table.className = 'timetable';
+
+                const headerRow = document.createElement('tr');
+                headerRow.innerHTML = '<th>Day/Time</th>';
+                for (let i = 0; i < 6; i++) {
+                    headerRow.innerHTML += `<th>Slot ${i + 1}</th>`;
+                }
+                table.appendChild(headerRow);
+
+                for (let day = 0; day < 5; day++) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td>Day ${day + 1}</td>`;
+                    for (let slot = 0; slot < 6; slot++) {
+                        row.innerHTML += `<td>${timetable[day][slot] || 'Free'}</td>`;
+                    }
+                    table.appendChild(row);
+                }
+
+                sectionDiv.appendChild(table);
+                result.appendChild(sectionDiv);
+            }
+        }
+    </script>
+</body>
+</html>
