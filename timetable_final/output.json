@@ -1,0 +1,86 @@
+{
+    "Section_1": [
+        [
+            "civil (prof)",
+            "AEC (AEC_prof)",
+            "AIML_LAB (rajesh)",
+            "AIML_LAB (rajesh)",
+            "DAA_LAB (somesh)",
+            "DAA_LAB (somesh)"
+        ],
+        [
+            "civil (prof)",
+            "",
+            "CN (NS)",
+            "DAA (anupama)",
+            "MATH (user2)",
+            "AIML (somesh)"
+        ],
+        [
+            "civil (prof)",
+            "AIML (somesh)",
+            "UHV (vijay)",
+            "MATH (user2)",
+            "CN (NS)",
+            "DAA (anupama)"
+        ],
+        [
+            "DAA (anupama)",
+            "AIML (somesh)",
+            "UHV (vijay)",
+            "CN (NS)",
+            "MATH (user2)",
+            ""
+        ],
+        [
+            "",
+            "DAA (anupama)",
+            "AIML (somesh)",
+            "",
+            "",
+            ""
+        ]
+    ],
+    "Section_2": [
+        [
+            "civil (prof)",
+            "AEC (AEC_prof)",
+            "DAA (anupama)",
+            "AIML (viswa)",
+            "CN (viswa)",
+            "MATH (user1)"
+        ],
+        [
+            "civil (prof)",
+            "",
+            "MATH (user1)",
+            "AIML (viswa)",
+            "CN (viswa)",
+            "DAA (anupama)"
+        ],
+        [
+            "civil (prof)",
+            "",
+            "DAA (anupama)",
+            "UHV (vijay)",
+            "",
+            "AIML (viswa)"
+        ],
+        [
+            "DAA_LAB (somesh)",
+            "DAA_LAB (somesh)",
+            "AIML_LAB (anupama)",
+            "AIML_LAB (anupama)",
+            "MATH (user1)",
+            "CN (viswa)"
+        ],
+        [
+            "",
+            "UHV (vijay)",
+            "",
+            "",
+            "AIML (viswa)",
+            "DAA (anupama)"
+        ]
+    ]
+}

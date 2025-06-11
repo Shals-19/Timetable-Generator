@@ -1,0 +1,87 @@
+{
+    "numSections": 2,
+    "courses": [
+        {
+            "name": "AIML",
+            "frequency": 4,
+            "duration": 1,
+            "professors": [
+                "viswa",
+                "somesh"
+            ]
+        },
+        {
+            "name": "DAA",
+            "frequency": 4,
+            "duration": 1,
+            "professors": [
+                "anupama",
+                "rajesh"
+            ]
+        },
+        {
+            "name": "UHV",
+            "frequency": 2,
+            "duration": 1,
+            "professors": [
+                "sathish",
+                "vijay"
+            ]
+        },
+        {
+            "name": "MATH",
+            "frequency": 3,
+            "duration": 1,
+            "professors": [
+                "user1",
+                "user2"
+            ]
+        },
+        {
+            "name": "CN",
+            "frequency": 3,
+            "duration": 1,
+            "professors": [
+                "NS",
+                "viswa"
+            ]
+        },
+        {
+            "name": "DAA_LAB",
+            "frequency": 1,
+            "duration": 2,
+            "professors": [
+                "viswa",
+                "somesh",
+                "vijay"
+            ]
+        },
+        {
+            "name": "AIML_LAB",
+            "frequency": 1,
+            "duration": 2,
+            "professors": [
+                "rajesh",
+                "anupama"
+            ]
+        }
+    ],
+    "combinedClasses": [
+        {
+            "name": "civil",
+            "frequency": 3,
+            "duration": 1,
+            "professors": [
+                "prof"
+            ]
+        },
+        {
+            "name": "AEC",
+            "frequency": 1,
+            "duration": 1,
+            "professors": [
+                "AEC_prof"
+            ]
+        }
+    ]
+}
