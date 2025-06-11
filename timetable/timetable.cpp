@@ -2,12 +2,11 @@
 #include <vector>
 #include <string>
 #include <map>
-#include <algorithm>
 #include <fstream>
-#include <sstream>
-#include <ctime>
-#include <iomanip>
+#include <algorithm>
+#include <set>
 #include <random>
+#include <ctime>
 #include "json.hpp"
 
 using namespace std;
@@ -15,8 +14,6 @@ using json = nlohmann::json;
 
 const int DAYS = 5;
 const int SLOTS_PER_DAY = 6;
-const vector<string> DAY_NAMES = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday"};
-const vector<string> TIME_SLOTS = {"9:00-10:00", "10:00-11:00", "11:00-12:00", "12:00-1:00", "1:00-2:00", "2:00-3:00"};
 
 struct Class {
     string name;
@@ -31,7 +28,6 @@ struct Section {
     string name;
 };
 
-int num_sections;
 vector<Section> sections;
 vector<Class> classes;
 vector<Class> combined_classes;
@@ -42,137 +38,49 @@ map<string, map<string, string>> section_professors;
 mt19937 rng;
 
 bool canFit(const vector<string>& day, int start, int duration) {
-    if (start + duration > SLOTS_PER_DAY) return false;
-    for (int i = start; i < start + duration; ++i) {
+    for (int i = start; i < start + duration && i < SLOTS_PER_DAY; ++i)
         if (!day[i].empty()) return false;
-    }
     return true;
 }
 
 bool isClassScheduledOnDay(const vector<string>& day, const string& className) {
     for (const string& slot : day) {
-        if (!slot.empty() && slot.find(className) != string::npos) {
+        if (slot.find(className) != string::npos)
             return true;
-        }
     }
     return false;
 }
 
 string selectRandomProfessor(const vector<string>& professors) {
-    if (professors.empty()) return "TBD";
     uniform_int_distribution<int> dist(0, professors.size() - 1);
     return professors[dist(rng)];
 }
 
 void preAssignProfessors() {
-    cout << "Pre-assigning professors..." << endl;
-    for (const auto& sec : sections) {
-        string secName = sec.name;
-        for (const auto& c : classes) {
-            section_professors[secName][c.name] = selectRandomProfessor(c.professors);
-            cout << "  Section " << secName << ": " << c.name << " -> " << section_professors[secName][c.name] << endl;
-        }
-        for (const auto& c : combined_classes) {
-            section_professors[secName][c.name] = selectRandomProfessor(c.professors);
-            cout << "  Section " << secName << ": " << c.name << " (combined) -> " << section_professors[secName][c.name] << endl;
-        }
+    for (auto& section : sections) {
+        for (auto& c : classes)
+            section_professors[section.name][c.name] = selectRandomProfessor(c.professors);
+        for (auto& c : combined_classes)
+            section_professors[section.name][c.name] = selectRandomProfessor(c.professors);
     }
-}
-
-void loadInputFromJson(const string& filename) {
-    ifstream inFile(filename);
-    if (!inFile.is_open()) {
-        cerr << "Error: Failed to open " << filename << endl;
-        exit(1);
-    }
-
-    json j;
-    try {
-        inFile >> j;
-    } catch (const json::exception& e) {
-        cerr << "Error parsing JSON: " << e.what() << endl;
-        exit(1);
-    }
-
-    if (!j.contains("numSections") || !j.contains("courses")) {
-        cerr << "Error: Missing required fields in input.json" << endl;
-        exit(1);
-    }
-
-    num_sections = j["numSections"];
-    
-    // Create sections
-    sections.clear();
-    for (int i = 0; i < num_sections; ++i) {
-        Section s;
-        s.name = string(1, 'A' + i);
-        sections.push_back(s);
-    }
-
-    // Load courses
-    classes.clear();
-    for (const auto& item : j["courses"]) {
-        Class c;
-        c.name = item["name"];
-        c.frequency_per_week = item["frequency"];
-        c.duration = item["duration"];
-        c.is_lab = (c.duration == 2);
-        c.is_combined = false;
-        if (item.contains("professors") && item["professors"].is_array()) {
-            c.professors = item["professors"].get<vector<string>>();
-        }
-        classes.push_back(c);
-        cout << "Loaded class: " << c.name << " (freq: " << c.frequency_per_week << ", duration: " << c.duration << ")" << endl;
-    }
-
-    // Load combined classes
-    combined_classes.clear();
-    if (j.contains("combinedClasses") && j["combinedClasses"].is_array()) {
-        for (const auto& item : j["combinedClasses"]) {
-            Class c;
-            c.name = item["name"];
-            c.frequency_per_week = item["frequency"];
-            c.duration = item["duration"];
-            c.is_lab = (c.duration == 2);
-            c.is_combined = true;
-            if (item.contains("professors") && item["professors"].is_array()) {
-                c.professors = item["professors"].get<vector<string>>();
-            }
-            combined_classes.push_back(c);
-            cout << "Loaded combined class: " << c.name << " (freq: " << c.frequency_per_week << ", duration: " << c.duration << ")" << endl;
-        }
-    }
-
-    cout << "Successfully loaded " << num_sections << " sections, " 
-         << classes.size() << " classes, " << combined_classes.size() << " combined classes." << endl;
 }
 
 void initTimetables() {
-    timetable.clear();
-    for (const auto& sec : sections) {
-        timetable[sec.name] = vector<vector<string>>(DAYS, vector<string>(SLOTS_PER_DAY, ""));
+    for (auto& section : sections) {
+        timetable[section.name] = vector<vector<string>>(DAYS, vector<string>(SLOTS_PER_DAY, ""));
     }
-    cout << "Initialized timetables for " << sections.size() << " sections" << endl;
 }
 
 vector<int> getLabSlots() {
-    return {0, 2, 4}; // Start slots for 2-hour labs
+    return {0, 2, 4};
 }
 
 void assignCombinedClasses() {
-    cout << "Assigning " << combined_classes.size() << " combined classes..." << endl;
-    for (const auto& c : combined_classes) {
-        cout << "Processing combined class: " << c.name << endl;
+    for (auto& c : combined_classes) {
         for (int freq = 0; freq < c.frequency_per_week; ++freq) {
             bool placed = false;
-            cout << "  Attempting to place occurrence " << (freq + 1) << "/" << c.frequency_per_week << endl;
-            
             for (int d = 0; d < DAYS && !placed; ++d) {
-                // Check if already scheduled on this day
-                if (isClassScheduledOnDay(timetable[sections[0].name][d], c.name)) {
-                    cout << "    Day " << d << ": Already scheduled" << endl;
-                    continue;
-                }
+                if (isClassScheduledOnDay(timetable[sections[0].name][d], c.name)) continue;
 
                 vector<int> slots_to_try = (c.duration == 2) ? getLabSlots() : vector<int>{0, 1, 2, 3, 4, 5};
 
@@ -180,177 +88,156 @@ void assignCombinedClasses() {
                     if (t + c.duration > SLOTS_PER_DAY) continue;
 
                     bool all_free = true;
-                    for (const auto& sec : sections) {
-                        if (!canFit(timetable[sec.name][d], t, c.duration)) {
+                    for (auto& section : sections) {
+                        if (!canFit(timetable[section.name][d], t, c.duration)) {
                             all_free = false;
                             break;
                         }
                     }
 
                     if (all_free) {
-                        for (const auto& sec : sections) {
-                            string prof = section_professors[sec.name][c.name];
-                            for (int k = 0; k < c.duration; ++k) {
-                                timetable[sec.name][d][t + k] = c.name + " (" + prof + ")";
-                            }
+                        for (auto& section : sections) {
+                            string prof = section_professors[section.name][c.name];
+                            for (int k = 0; k < c.duration; ++k)
+                                timetable[section.name][d][t + k] = c.name + " (" + prof + ")";
                         }
                         placed = true;
-                        cout << "    Placed on " << DAY_NAMES[d] << " at slot " << t << endl;
                         break;
                     }
                 }
             }
-            if (!placed) {
-                cout << "    WARNING: Could not place occurrence " << (freq + 1) << endl;
-            }
         }
     }
 }
 
+vector<int> getRandomizedOrder(int max_val, int seed_offset = 0) {
+    vector<int> order(max_val);
+    iota(order.begin(), order.end(), 0);
+    mt19937 local_rng(time(0) + seed_offset);
+    shuffle(order.begin(), order.end(), local_rng);
+    return order;
+}
+
 void assignIndividualClasses() {
-    cout << "Assigning individual classes..." << endl;
-    
-    for (const auto& sec : sections) {
-        cout << "Processing section " << sec.name << endl;
-        auto& grid = timetable[sec.name];
-        
-        // Sort classes: labs first, then by frequency (descending)
+    int section_seed = 0;
+    for (auto& section : sections) {
+        auto& grid = timetable[section.name];
         vector<Class> section_classes = classes;
-        sort(section_classes.begin(), section_classes.end(), [](const Class& a, const Class& b) {
+        mt19937 local_rng(time(0) + section_seed);
+
+        sort(section_classes.begin(), section_classes.end(), [&](Class& a, Class& b) {
             if (a.is_lab != b.is_lab) return a.is_lab > b.is_lab;
             return a.frequency_per_week > b.frequency_per_week;
         });
 
-        for (const auto& c : section_classes) {
-            cout << "  Assigning " << c.name << " (freq: " << c.frequency_per_week 
-                 << ", duration: " << c.duration << ")" << endl;
-            
+        for (auto& c : section_classes) {
             for (int freq = 0; freq < c.frequency_per_week; ++freq) {
                 bool placed = false;
-                cout << "    Placing occurrence " << (freq + 1) << "/" << c.frequency_per_week << endl;
-                
-                for (int d = 0; d < DAYS && !placed; ++d) {
-                    // Skip if already scheduled on this day
-                    if (isClassScheduledOnDay(grid[d], c.name)) {
-                        continue;
-                    }
+                vector<int> day_order = getRandomizedOrder(DAYS, section_seed + freq);
+
+                for (int day_idx : day_order) {
+                    if (placed) break;
+                    if (isClassScheduledOnDay(grid[day_idx], c.name)) continue;
 
                     if (c.duration == 2) {
-                        // Lab scheduling
                         vector<int> lab_slots = getLabSlots();
+                        shuffle(lab_slots.begin(), lab_slots.end(), local_rng);
                         for (int t : lab_slots) {
-                            if (canFit(grid[d], t, c.duration)) {
-                                string prof = section_professors[sec.name][c.name];
-                                for (int k = 0; k < c.duration; ++k) {
-                                    grid[d][t + k] = c.name + " (" + prof + ")";
-                                }
+                            if (canFit(grid[day_idx], t, c.duration)) {
+                                string prof = section_professors[section.name][c.name];
+                                for (int k = 0; k < c.duration; ++k)
+                                    grid[day_idx][t + k] = c.name + " (" + prof + ")";
                                 placed = true;
-                                cout << "      Placed lab on " << DAY_NAMES[d] << " at slots " << t << "-" << (t+1) << endl;
                                 break;
                             }
                         }
                     } else {
-                        // Regular class scheduling
-                        for (int t = 0; t < SLOTS_PER_DAY; ++t) {
-                            if (canFit(grid[d], t, c.duration)) {
-                                string prof = section_professors[sec.name][c.name];
-                                grid[d][t] = c.name + " (" + prof + ")";
+                        vector<int> slot_order = getRandomizedOrder(SLOTS_PER_DAY, section_seed + day_idx);
+                        for (int t : slot_order) {
+                            if (canFit(grid[day_idx], t, c.duration)) {
+                                string prof = section_professors[section.name][c.name];
+                                grid[day_idx][t] = c.name + " (" + prof + ")";
                                 placed = true;
-                                cout << "      Placed on " << DAY_NAMES[d] << " at slot " << t << " (" << TIME_SLOTS[t] << ")" << endl;
                                 break;
                             }
                         }
                     }
-                    if (placed) break;
-                }
-                if (!placed) {
-                    cout << "      WARNING: Could not place occurrence " << (freq + 1) << endl;
                 }
             }
         }
+        section_seed += 100;
     }
 }
 
-void printTimetable() {
-    cout << "\n=== Generated Timetables ===" << endl;
-    for (const auto& sec : sections) {
-        cout << "\nSection " << sec.name << ":" << endl;
-        cout << "Time Slot    ";
-        for (int d = 0; d < DAYS; ++d) {
-            cout << setw(20) << DAY_NAMES[d];
-        }
-        cout << endl;
-        
-        for (int t = 0; t < SLOTS_PER_DAY; ++t) {
-            cout << setw(12) << TIME_SLOTS[t] << " ";
-            for (int d = 0; d < DAYS; ++d) {
-                string slot = timetable[sec.name][d][t];
-                if (slot.empty()) slot = "FREE";
-                cout << setw(20) << slot.substr(0, 19);
-            }
-            cout << endl;
-        }
+void loadInputJSON(const string& filename) {
+    ifstream in(filename);
+    json j;
+    in >> j;
+
+    int numSections = j["numSections"];
+    for (int i = 0; i < numSections; ++i) {
+        string section_name = "Section_" + to_string(i + 1); // You can change names to A, B, etc. if preferred
+        sections.push_back({section_name});
+    }
+
+    for (const auto& c : j["courses"]) {
+        Class cl;
+        cl.name = c["name"];
+        cl.frequency_per_week = c["frequency"];
+        cl.duration = c["duration"];
+        cl.is_lab = (cl.duration == 2);
+        cl.is_combined = false;
+        for (const auto& prof : c["professors"])
+            cl.professors.push_back(prof.get<string>());
+        classes.push_back(cl);
+    }
+
+    for (const auto& c : j["combinedClasses"]) {
+        Class cl;
+        cl.name = c["name"];
+        cl.frequency_per_week = c["frequency"];
+        cl.duration = c["duration"];
+        cl.is_lab = (cl.duration == 2);
+        cl.is_combined = true;
+        for (const auto& prof : c["professors"])
+            cl.professors.push_back(prof.get<string>());
+        combined_classes.push_back(cl);
     }
 }
 
-void saveOutputToJson(const string& filename) {
-    json output;
 
-    // Add metadata
-    output["metadata"]["generatedAt"] = time(0);
-    output["metadata"]["numSections"] = num_sections;
-    output["metadata"]["daysPerWeek"] = DAYS;
-    output["metadata"]["slotsPerDay"] = SLOTS_PER_DAY;
-    output["metadata"]["dayNames"] = DAY_NAMES;
-    output["metadata"]["timeSlots"] = TIME_SLOTS;
+void writeOutputJSON(const string& filename) {
+    json out;
+    for (auto& pair : timetable) {
+        const string& section = pair.first;
+        const auto& grid = pair.second;
 
-    // Add timetables - ensure no nulls
-    for (const auto& sec : sections) {
-        json timetableArray;
+        json week;
         for (int d = 0; d < DAYS; ++d) {
             json day;
             for (int t = 0; t < SLOTS_PER_DAY; ++t) {
-                string slot = timetable[sec.name][d][t];
-                // Replace empty slots with "FREE" to avoid nulls
-                day.push_back(slot.empty() ? "FREE" : slot);
+                day.push_back(grid[d][t]);
             }
-            timetableArray.push_back(day);
+            week.push_back(day);
         }
-        output["sections"][sec.name] = timetableArray;
+
+        out[section] = week;
     }
 
-    try {
-        ofstream outFile(filename);
-        if (!outFile.is_open()) {
-            cerr << "Error: Could not create " << filename << endl;
-            return;
-        }
-        outFile << output.dump(4);
-        cout << "\nTimetable successfully saved to " << filename << "!" << endl;
-    } catch (const exception& e) {
-        cerr << "Error saving output: " << e.what() << endl;
-    }
+    ofstream o(filename);
+    o << setw(4) << out << endl;
 }
 
 int main() {
     rng.seed(time(0));
 
-    cout << "=== Timetable Generator ===" << endl;
-    cout << "Reading input from input.json..." << endl;
-    
-    loadInputFromJson("input.json");
+    loadInputJSON("input.json");
     initTimetables();
     preAssignProfessors();
-    
-    if (!combined_classes.empty()) {
-        assignCombinedClasses();
-    }
-    
+    assignCombinedClasses();
     assignIndividualClasses();
-    
-    printTimetable();
-    saveOutputToJson("output.json");
-    
-    cout << "\n=== Generation Complete ===" << endl;
+    writeOutputJSON("output.json");
+
+    cout << "Timetable generation completed. Output saved to output.json" << endl;
     return 0;
 }

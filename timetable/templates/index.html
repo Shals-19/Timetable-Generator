@@ -154,37 +154,47 @@
             }
         };
 
-        function displayTimetable(data) {
-            const result = document.getElementById('result');
-            result.innerHTML = '';
+function displayTimetable(data) {
+    const result = document.getElementById('result');
+    result.innerHTML = '';
 
-            for (const [section, timetable] of Object.entries(data)) {
-                const sectionDiv = document.createElement('div');
-                sectionDiv.innerHTML = `<h2>Section: ${section}</h2>`;
+    const sections = data.sections || data;
+    const days = data.metadata?.dayNames || ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+    const slots = data.metadata?.timeSlots || [
+        "9:00–10:00", "10:00–11:00", "11:00–12:00",
+        "12:00–1:00", "1:00–2:00", "2:00–3:00"
+    ];
 
-                const table = document.createElement('table');
-                table.className = 'timetable';
+    for (const [section, timetable] of Object.entries(sections)) {
+        const sectionDiv = document.createElement('div');
+        sectionDiv.innerHTML = `<h2>Section: ${section}</h2>`;
 
-                const headerRow = document.createElement('tr');
-                headerRow.innerHTML = '<th>Day/Time</th>';
-                for (let i = 0; i < 6; i++) {
-                    headerRow.innerHTML += `<th>Slot ${i + 1}</th>`;
-                }
-                table.appendChild(headerRow);
+        const table = document.createElement('table');
+        table.className = 'timetable';
 
-                for (let day = 0; day < 5; day++) {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `<td>Day ${day + 1}</td>`;
-                    for (let slot = 0; slot < 6; slot++) {
-                        row.innerHTML += `<td>${timetable[day][slot] || 'Free'}</td>`;
-                    }
-                    table.appendChild(row);
-                }
-
-                sectionDiv.appendChild(table);
-                result.appendChild(sectionDiv);
-            }
+        const headerRow = document.createElement('tr');
+        headerRow.innerHTML = '<th>Time / Day</th>';
+        for (const day of days) {
+            headerRow.innerHTML += `<th>${day}</th>`;
         }
+        table.appendChild(headerRow);
+
+        for (let slot = 0; slot < slots.length; slot++) {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td>${slots[slot]}</td>`;
+            for (let day = 0; day < days.length; day++) {
+                const cell = timetable[day]?.[slot] || 'Free';
+                row.innerHTML += `<td>${cell}</td>`;
+            }
+            table.appendChild(row);
+        }
+
+        sectionDiv.appendChild(table);
+        result.appendChild(sectionDiv);
+    }
+}
+
+
     </script>
 </body>
 </html>

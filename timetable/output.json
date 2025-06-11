@@ -1,1 +1,86 @@
-null
+{
+    "Section_1": [
+        [
+            "civil (prof)",
+            "DAA (anupama)",
+            "AIML (viswa)",
+            "UHV ( vijay)",
+            "AEC (AEC_prof)",
+            "CN ( viswa)"
+        ],
+        [
+            "civil (prof)",
+            "DAA (anupama)",
+            "CN ( viswa)",
+            "AIML (viswa)",
+            "",
+            "MATH ( user2)"
+        ],
+        [
+            "civil (prof)",
+            "MATH ( user2)",
+            "AIML_LAB ( anupama)",
+            "AIML_LAB ( anupama)",
+            "DAA_LAB (viswa)",
+            "DAA_LAB (viswa)"
+        ],
+        [
+            "AIML (viswa)",
+            "UHV ( vijay)",
+            "CN ( viswa)",
+            "DAA (anupama)",
+            "",
+            "MATH ( user2)"
+        ],
+        [
+            "",
+            "",
+            "DAA (anupama)",
+            "",
+            "AIML (viswa)",
+            ""
+        ]
+    ],
+    "Section_2": [
+        [
+            "civil (prof)",
+            "CN (NS)",
+            "UHV ( vijay)",
+            "MATH ( user2)",
+            "DAA (anupama)",
+            "AIML (viswa)"
+        ],
+        [
+            "civil (prof)",
+            "CN (NS)",
+            "",
+            "DAA (anupama)",
+            "AIML (viswa)",
+            ""
+        ],
+        [
+            "civil (prof)",
+            "MATH ( user2)",
+            "AIML_LAB (rajesh)",
+            "AIML_LAB (rajesh)",
+            "DAA_LAB ( vijay)",
+            "DAA_LAB ( vijay)"
+        ],
+        [
+            "AIML (viswa)",
+            "",
+            "",
+            "",
+            "",
+            "DAA (anupama)"
+        ],
+        [
+            "AEC (AEC_prof)",
+            "UHV ( vijay)",
+            "CN (NS)",
+            "MATH ( user2)",
+            "AIML (viswa)",
+            "DAA (anupama)"
+        ]
+    ]
+}

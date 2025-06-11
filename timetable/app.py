@@ -33,7 +33,7 @@ def generate():
 
         # Run the C++ executable
         result = subprocess.run(
-            ["timetable.exe"],  # Make sure timetable.exe is built and in the correct directory
+            ["timetable.exe"],
             input=cpp_input,
             text=True,
             capture_output=True
@@ -46,6 +46,17 @@ def generate():
             # Read the JSON output file
             with open("output.json", "r") as f:
                 output = json.load(f)
+
+            # Inject metadata if missing
+            if "metadata" not in output:
+                output["metadata"] = {
+                    "dayNames": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+                    "timeSlots": [
+                        "9:00–10:00", "10:00–11:00", "11:30–12:30",
+                        "12:30–1:30", "2:30–3:30", "3:30–4:30"
+                    ]
+                }
+
             return jsonify(output)
         else:
             return jsonify({
