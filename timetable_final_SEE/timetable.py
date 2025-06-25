@@ -157,3 +157,19 @@ def get_output_dict():
     for section, grid in timetable.items():
         out[section] = [day for day in grid]
     return out
+
+
+def get_professor_timetable(prof_name):
+    # Build a 5x6 grid for the professor
+    prof_grid = [["" for _ in range(SLOTS_PER_DAY)] for _ in range(DAYS)]
+    found = False
+    for section, grid in timetable.items():
+        for day in range(DAYS):
+            for slot in range(SLOTS_PER_DAY):
+                cell = grid[day][slot]
+                if cell and f"({prof_name})" in cell:
+                    prof_grid[day][slot] = f"{cell.split('(')[0].strip()}<br><small>{section}</small>"
+                    found = True
+    if not found:
+        return None
+    return prof_grid

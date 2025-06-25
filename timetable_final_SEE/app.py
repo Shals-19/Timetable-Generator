@@ -23,6 +23,24 @@ def generate():
         return jsonify(output)
     except Exception as e:
         return jsonify({"error": f"Server error: {str(e)}"})
+    
+
+
+@app.route("/professor_timetable", methods=["POST"])
+def professor_timetable():
+    try:
+        data = request.get_json()
+        prof_name = data.get("professor", "").strip()
+        if not prof_name:
+            return jsonify({"error": "No professor name provided."})
+        from timetable import get_professor_timetable
+        timetable = get_professor_timetable(prof_name)
+        if timetable is None:
+            return jsonify({"error": f"No timetable found for professor '{prof_name}'."})
+        return jsonify({"professor": prof_name, "timetable": timetable})
+    except Exception as e:
+        return jsonify({"error": f"Server error: {str(e)}"})
+
 
 if __name__ == "__main__":
     app.run(debug=True)

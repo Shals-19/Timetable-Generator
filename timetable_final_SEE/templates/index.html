@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <meta charset="UTF-8">
     <title>Multi-Semester Timetable Generator</title>
     <style>
@@ -121,6 +123,14 @@
     </form>
 
     <div id="result"></div>
+    <button id="downloadPdfBtn" type="button" style="display:none; margin:auto; display:block;">⬇️ Download as PDF</button>
+
+    <div style="max-width: 1000px; margin: 30px auto;">
+        <label for="profName" style="font-weight:bold;">Professor Name for Timetable:</label>
+        <input type="text" id="profName" placeholder="Enter professor name">
+        <button type="button" id="profTimetableBtn">🎓 Generate Professor Timetable</button>
+    </div>
+    <div id="profResult"></div>
 
     <script>
         let semesterCount = 0;
@@ -130,7 +140,7 @@
             const div = document.createElement('div');
             div.className = 'semester-block';
             div.innerHTML = `
-                <h3>Semester ${semesterCount + 1}</h3>
+                <h3>Input ${semesterCount + 1}</h3>
                 <label>Semester ID:</label>
                 <input type="text" name="semester${semesterCount}" required>
                 <label>Number of Sections:</label>
@@ -245,11 +255,13 @@
 
                 if (output.error) {
                     document.getElementById('result').innerHTML = `<p style="color: red; text-align: center;">${output.error}</p>`;
+                    document.getElementById('downloadPdfBtn').style.display = 'none';
                 } else {
                     displayTimetable(output);
                 }
             } catch (error) {
                 document.getElementById('result').innerHTML = `<p style="color: red; text-align: center;">Error: ${error.message}</p>`;
+                document.getElementById('downloadPdfBtn').style.display = 'none';
             }
         };
 
@@ -283,7 +295,74 @@
                 sectionDiv.appendChild(table);
                 result.appendChild(sectionDiv);
             }
+            // Show the download button when timetable is displayed
+            document.getElementById('downloadPdfBtn').style.display = 'block';
         }
+
+        // PDF download handler
+        document.getElementById('downloadPdfBtn').addEventListener('click', function() {
+            const resultDiv = document.getElementById('result');
+            html2canvas(resultDiv).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new window.jspdf.jsPDF({
+                    orientation: 'landscape',
+                    unit: 'pt',
+                    format: 'a4'
+                });
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
+                const imgWidth = canvas.width;
+                const imgHeight = canvas.height;
+                const ratio = Math.min(pageWidth / imgWidth, pageHeight / imgHeight);
+                const imgX = (pageWidth - imgWidth * ratio) / 2;
+                const imgY = 20;
+                pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+                pdf.save('timetable.pdf');
+            });
+        });
+
+        // ...existing code...
+
+        document.getElementById('profTimetableBtn').addEventListener('click', async function() {
+            const profName = document.getElementById('profName').value.trim();
+            if (!profName) {
+                document.getElementById('profResult').innerHTML = '<p style="color:red;text-align:center;">Please enter a professor name.</p>';
+                return;
+            }
+            try {
+                const res = await fetch('/professor_timetable', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ professor: profName })
+                });
+                const output = await res.json();
+                if (output.error) {
+                    document.getElementById('profResult').innerHTML = `<p style="color:red;text-align:center;">${output.error}</p>`;
+                } else {
+                    displayProfessorTimetable(output);
+                }
+            } catch (error) {
+                document.getElementById('profResult').innerHTML = `<p style="color:red;text-align:center;">Error: ${error.message}</p>`;
+            }
+        });
+
+        //professor timetable
+        function displayProfessorTimetable(data) {
+            const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+            const slots = ["9:00–10:00", "10:00–11:00", "11:30–12:30", "12:30–1:30", "2:30–3:30", "3:30–4:30"];
+            let html = `<h2 style="text-align:center;">🧑‍🏫 Timetable for ${data.professor}</h2>`;
+            html += `<table class="timetable"><tr><th>⏰ Time / Day</th>${days.map(d=>`<th>${d}</th>`).join('')}</tr>`;
+            for (let slot = 0; slot < slots.length; slot++) {
+                html += `<tr><td>${slots[slot]}</td>`;
+                for (let day = 0; day < days.length; day++) {
+                    html += `<td>${data.timetable[day][slot] || 'Free'}</td>`;
+                }
+                html += `</tr>`;
+            }
+            html += `</table>`;
+            document.getElementById('profResult').innerHTML = html;
+        }
+
     </script>
 </body>
 </html>
